@@ -1,7 +1,7 @@
 ---
 name: project-kanban-setup
 description: Bootstrap a new software project on the Hermes Kanban board. Collects project details, validates inputs, previews the task graph, then creates it with idempotency guarantees.
-version: 1.2.0
+version: 1.3.0
 metadata:
   hermes:
     tags: [project-setup, kanban, automation]
@@ -83,20 +83,24 @@ hermes kanban list --tenant $SLUG 2>/dev/null
 存储路径: $STORAGE_PATH
 
 任务预览:
-──────────────────────────────────────────────────────────────────
-#  任务名称                    角色            依赖
-──────────────────────────────────────────────────────────────────
-1  设计 ${PROJECT_NAME} 界面原型   ui-designer     (无)
-2  设计 ${PROJECT_NAME} 数据库模型  backend-dev     (无)
-3  实现前端页面                frontend-dev     #1
-4  实现后端 API                backend-dev      #2
-5  编写前端自动化测试           qa-dev           #3
-6  编写后端 API 测试            qa-dev           #4
-7  编写 API 接口文档            tech-writer      #4
-8  编写用户操作手册            tech-writer      #3
-9  前后端联调集成               backend-dev      #3, #4
-10 端到端系统测试               qa-dev           #5, #6, #9
-──────────────────────────────────────────────────────────────────
+────────────────────────────────────────────────────────────────────
+#  任务名称                      角色            依赖
+────────────────────────────────────────────────────────────────────
+1  设计 ${PROJECT_NAME} 界面原型     ui-designer     (无)
+2  设计 ${PROJECT_NAME} 数据库模型    backend-dev     (无)
+3  实现前端页面                  frontend-dev     #1
+4  实现后端 API                  backend-dev      #2
+5  编写前端自动化测试             qa-dev           #3
+6  编写后端 API 测试              qa-dev           #4
+7  编写 API 接口文档              tech-writer      #4
+8  编写用户操作手册              tech-writer      #3
+9  前后端联调集成                 backend-dev      #3, #4
+10 代码审查                      code-reviewer    #3
+11 安全审查                      code-reviewer    #4
+12 SQL 审查                      code-reviewer    #2
+13 性能审查                      code-reviewer    #4
+14 端到端系统测试                 qa-dev           #5, #6, #9, #10, #11, #13
+────────────────────────────────────────────────────────────────────
 ```
 
 Ask: "以上是即将创建的任务预览，确认创建吗？（yes/no）"
@@ -291,6 +295,12 @@ If the user says "开始工作" or "启动调度器", run:
 ```bash
 hermes kanban dispatch --tenant $SLUG
 ```
+
+---
+
+## Skill Git push
+
+When updating this skill and pushing to GitHub, see `references/git-push-pattern.md` for the correct workflow (work from the skill dir, not /tmp clone, handle branch name mismatch).
 
 ---
 
