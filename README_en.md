@@ -10,26 +10,41 @@ Hermes Agent skill: bootstrap a new software project with the Hermes Kanban boar
 
 This skill guides you through setting up a new software project on the Hermes Kanban board. The flow:
 
-1. **Collect project details**
-   - Project name (required, used as unique identifier)
-   - Storage path (default: `/data/workspace/<project-name>`)
-   - Frontend technology (default: React)
-   - Backend technology (default: Python/FastAPI)
-   - Database choice (default: PostgreSQL)
+### 1. Collect project details
+- Project name (required, used as unique identifier)
+- Storage path (default: `/data/workspace/<project-name>`)
+- Frontend technology (default: React)
+- Backend technology (default: Python/FastAPI)
+- Database choice (default: PostgreSQL)
 
-2. **Dry-run preview**
-   - Print the full task dependency graph before creating anything
-   - Wait for user confirmation (yes/no) before proceeding
+### 2. Idempotent initialization
+- Check if the tenant board already exists to avoid duplicate creation
+- Safe to re-run without creating duplicate tasks
 
-3. **Idempotent task creation**
-   - Each task uses `--idempotency-key` to prevent duplicates
-   - Re-running the skill never creates duplicate tasks
+### 3. Dry-run preview
+- Print the full task dependency graph before creating anything
+- Wait for user confirmation (yes/no) before proceeding
 
-4. **Initial task graph**
-   - UI Design → Frontend Implementation → Frontend Tests
-   - Database Model → Backend API → Backend Tests
-   - API Documentation / User Manual
-   - Integration → End-to-End Tests
+### 4. Initial task dependency graph (14 tasks)
+
+```
+T1:  UI Design                   (no parents)
+T2:  Database Model              (no parents)
+T3:  Frontend Implementation     ← T1
+T4:  Backend API                 ← T2
+T5:  Frontend Tests               ← T3
+T6:  Backend Tests                ← T4
+T7:  API Documentation            ← T4
+T8:  User Manual                  ← T3
+T9:  Frontend-Backend Integration ← T3, T4
+T10: Code Review                  ← T3 (frontend code)
+T11: Security Review              ← T4 (backend code)
+T12: SQL Review                  ← T2 (database model)
+T13: Performance Review          ← T4 (backend API)
+T14: End-to-End Tests            ← T5, T6, T9, T10, T11, T13
+```
+
+Tasks T10–T13 (Code Review, Security Review, SQL Review, Performance Review) are executed by a dedicated **code-reviewer** profile, providing comprehensive quality assurance across the entire codebase.
 
 ## Usage
 
@@ -49,16 +64,6 @@ The agent will automatically:
 
 You can then optionally trigger the dispatcher to start work immediately.
 
-## File Structure
-
-```
-project-kanban-setup/
-├── SKILL.md          # Skill definition
-├── README.md         # Chinese documentation
-├── README_en.md      # This file (English)
-└── references/       # Additional resources (if any)
-```
-
 ## Parameters
 
 | Parameter | Description | Default |
@@ -72,16 +77,41 @@ project-kanban-setup/
 ## Task Dependencies
 
 ```
-T1: UI Design                   (no parents)
-T2: Database Model              (no parents)
-T3: Frontend Implementation     ← T1
-T4: Backend API                 ← T2
-T5: Frontend Tests              ← T3
-T6: Backend Tests                ← T4
-T7: API Documentation            ← T4
-T8: User Manual                  ← T3
-T9: Frontend-Backend Integration ← T3, T4
-T10: End-to-End Tests            ← T5, T6, T9
+T1:  UI Design                   (no parents)
+T2:  Database Model              (no parents)
+T3:  Frontend Implementation     ← T1
+T4:  Backend API                 ← T2
+T5:  Frontend Tests              ← T3
+T6:  Backend Tests                ← T4
+T7:  API Documentation            ← T4
+T8:  User Manual                  ← T3
+T9:  Frontend-Backend Integration ← T3, T4
+T10: Code Review                  ← T3 (frontend code)
+T11: Security Review              ← T4 (backend code)
+T12: SQL Review                  ← T2 (database model)
+T13: Performance Review          ← T4 (backend API)
+T14: End-to-End Tests            ← T5, T6, T9, T10, T11, T13
+```
+
+## Role Definitions
+
+| Role | Responsibility |
+|------|----------------|
+| ui-designer | UI prototype design |
+| frontend-dev | Frontend page implementation |
+| backend-dev | Backend API implementation, integration |
+| qa-dev | Unit tests, E2E tests |
+| tech-writer | API docs, user manual |
+| code-reviewer | Code review, security review, SQL review, performance review |
+
+## File Structure
+
+```
+project-kanban-setup/
+├── SKILL.md          # Skill definition
+├── README.md         # Chinese documentation
+├── README_en.md      # This file (English)
+└── references/       # Additional resources (if any)
 ```
 
 ## Common Commands
@@ -91,7 +121,7 @@ T10: End-to-End Tests            ← T5, T6, T9
 hermes kanban list --tenant <slug>
 
 # Trigger the dispatcher to start work
-hermes kanban dispatch --tenant <slug>
+hermes kanban dispatch --tenant $SLUG
 
 # Re-initialize the board (idempotent)
 hermes kanban init
@@ -102,6 +132,12 @@ hermes kanban init
 - Hermes Agent installed
 - GitHub Token configured in `.env` (for repository creation)
 - Git configured with username and email
+
+## Install this Skill
+
+```bash
+hermes skills install https://github.com/runner1977/project-kanban-setup/raw/main/SKILL.md
+```
 
 ## License
 
